@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>Lakecity / CM Sahayata Kosh - Forms</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1a1a1a;
+    --paper:#fffdf8;
+    --accent:#8a1f1f;
+    --panel:#f4f1ea;
+    --panel-border:#dcd5c4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:#e8e4da;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
+
+  /* ---------- TAB BAR ---------- */
+  #tabbar{
+    height:52px;
+    flex:0 0 52px;
+    background:#2b2620;
+    display:flex;
+    align-items:center;
+    padding:0 16px;
+    gap:8px;
+    z-index:10;
+  }
+  #tabbar .brand{
+    color:#e8e4da;
+    font-size:12px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    margin-right:14px;
+    opacity:.7;
+  }
+  .tabbtn{
+    background:transparent;
+    color:#cfc7b6;
+    border:1px solid #4a4437;
+    padding:9px 18px;
+    border-radius:6px;
+    font-size:13.5px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .tabbtn.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  .tabbtn:hover:not(.active){border-color:#6e6551;color:#fff;}
+
+  /* ---------- APP SECTION LAYOUT ---------- */
+  .appSection{
+    flex:1;
+    display:none;
+    overflow:hidden;
+  }
+  .appSection.active{display:flex;}
+
+  #formPanel{
+    width:380px;
+    min-width:340px;
+    background:var(--panel);
+    border-right:1px solid var(--panel-border);
+    padding:20px 20px 24px;
+    overflow-y:auto;
+    height:100%;
+  }
+  #formPanel h1{
+    font-size:15px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 4px;
+  }
+  #formPanel p.sub{
+    font-size:11.5px;
+    color:#6b6558;
+    margin:0 0 16px;
+    line-height:1.5;
+  }
+  .grp{margin-bottom:12px;}
+  .grp label{
+    display:block;
+    font-size:10.5px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    color:#7a7362;
+    margin-bottom:4px;
+  }
+  .grp input, .grp textarea{
+    width:100%;
+    padding:7px 9px;
+    border:1px solid var(--panel-border);
+    border-radius:4px;
+    background:#fff;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  .grp textarea{resize:vertical;min-height:40px;}
+  .grp input:focus, .grp textarea:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  .row2{display:flex;gap:8px;}
+  .row2 .grp{flex:1;}
+  fieldset{
+    border:1px solid var(--panel-border);
+    border-radius:6px;
+    margin:0 0 14px;
+    padding:10px 10px 2px;
+  }
+  legend{
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--accent);
+    padding:0 5px;
+  }
+  .printBtn{
+    width:100%;
+    padding:12px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .printBtn:hover{background:#6e1919;}
+  .saveNote{
+    font-size:10.5px;
+    color:#2f6b2f;
+    margin-top:8px;
+    line-height:1.5;
+    background:#eaf3ea;
+    border:1px solid #cfe3cf;
+    padding:6px 8px;
+    border-radius:4px;
+  }
+  .hint{font-size:10.5px;color:#8a8371;margin-top:8px;line-height:1.5;}
+
+  /* ---------- DOC WRAP ---------- */
+  #docWrap-ck, #docWrap-cm{
+    flex:1;
+    padding:30px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:26px;
+    overflow-y:auto;
+    height:100%;
+  }
+  .page{
+    width:794px;
+    background:var(--paper);
+    box-shadow:0 4px 24px rgba(0,0,0,.18);
+    font-family:'Noto Sans Devanagari','Inter',sans-serif;
+    flex-shrink:0;
+  }
+
+  /* ---- Chikitsakiya Praklan page (single, fixed height, no overflow) ---- */
+  #ck_page{
+    height:1123px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  /*#ck_headerBlank{
+    height:175px;flex:0 0 175px;
+    border-bottom:2px dashed #cfc7b3;
+    display:flex;align-items:center;justify-content:center;
+    color:#b8b0a0;font-size:11px;letter-spacing:.04em;text-align:center;padding:0 40px;
+  }*/
+  #ck_body{
+    flex:1;padding:20px 48px 30px;font-size:14px;color:#111;
+    display:flex;flex-direction:column;justify-content:flex-start;gap:11px;overflow:hidden;
+  }
+  .toprow{display:flex;justify-content:space-between;font-size:13.5px;}
+  .title{text-align:center;font-weight:700;font-size:19px;text-decoration:underline;margin:2px 0;}
+  .justify-line{text-align:justify;line-height:1.55;margin:0;}
+  .field-row{display:flex;align-items:baseline;margin-bottom:6px;}
+  .field-row .label{width:330px;flex-shrink:0;}
+  .field-row .colon{width:14px;flex-shrink:0;}
+  .field-row .value{font-weight:700;flex:1;}
+  .bank-block .field-row .label{width:200px;}
+  .sign-area{display:flex;justify-content:space-between;font-size:13px;line-height:1.6;}
+  .sign-area .col{width:48%;}
+  .sign-area .col.right{text-align:right;}
+  .doc-name-block{margin-top:8px;}
+
+  /* ---- CM Sahayata Kosh pages ---- */
+  #cmSection .page{
+    min-height:1123px;
+    padding:34px 46px 40px;
+    font-size:13.3px;
+    color:#111;
+  }
+  .pagetop-num{text-align:center;font-weight:600;margin-bottom:10px;}
+  .formtitle{text-align:center;font-weight:700;font-size:15px;text-decoration:underline;margin-bottom:20px;}
+  .item-row{display:flex;align-items:baseline;gap:6px;margin-bottom:16px;}
+  .item-num{width:24px;flex-shrink:0;font-weight:600;}
+  .item-label{flex-shrink:0;white-space:nowrap;}
+  .item-fill{flex:1;border-bottom:1px dotted #333;min-height:17px;padding:0 4px;font-weight:700;}
+  .item-fill.small{flex:0 0 auto;min-width:90px;}
+  .boxes{display:flex;gap:3px;margin-left:6px;}
+  .box{width:21px;height:23px;border:1px solid #333;text-align:center;font-size:12.5px;line-height:23px;font-weight:700;flex-shrink:0;}
+  .footerpage{text-align:right;margin-top:10px;font-weight:600;}
+  .declare{margin-top:14px;line-height:1.8;}
+  .place-date{margin-top:18px;line-height:2.1;}
+  .place-date .item-fill{display:inline-block;min-width:220px;}
+  .sign-block{display:flex;justify-content:flex-end;margin-top:16px;}
+  .sign-block .col{width:300px;line-height:2;}
+  .sign-block .col .item-fill{min-width:220px;}
+  .attach{margin-top:22px;font-size:13px;line-height:1.9;}
+  .attach ol{margin:4px 0 0 20px;padding:0;}
+  .note-box{margin-top:14px;border:1.5px solid #333;padding:10px 12px;font-size:12.3px;line-height:1.7;}
+
+  @media print{
+    body{background:#fff;overflow:visible;height:auto;}
+    #tabbar{display:none;}
+    #formPanel{display:none;}
+    .appSection{overflow:visible;}
+    #docWrap-ck, #docWrap-cm{padding:0;gap:0;overflow:visible;height:auto;}
+    .page{box-shadow:none;width:100%;page-break-after:always;}
+    .page:last-child{page-break-after:auto;}
+    #ck_page{height:100vh;}
+    @page{margin:0;size:A4;}
+  }
+</style>
+</head>
+<body>
+
+<div id="tabbar">
+  <span class="brand">Forms</span>
+  <button class="tabbtn active" id="tabBtn_ck" onclick="switchTab('ck')">चिकित्सकीय प्राक्कलन</button>
+  <button class="tabbtn" id="tabBtn_cm" onclick="switchTab('cm')">CM सहायता कोष फॉर्म</button>
+</div>
+
+<!-- ================= SECTION 1: CHIKITSAKIYA PRAKLAN ================= -->
+<div id="ckSection" class="appSection active">
+
+  <div id="formPanel">
+    <h1>Certificate Details</h1>
+    <p class="sub">Fill fields in English — the document on the right updates live in Hindi. Fits exactly one A4 page.</p>
+
+    <fieldset>
+      <legend>Letter Info</legend>
+      <div class="row2">
+        <div class="grp"><label>Letter No.</label><input id="ck_letterNo" value="1920"></div>
+        <div class="grp"><label>Date</label><input id="ck_letterDate" value="30/06/2026"></div>
+      </div>
+      <div class="row2">
+        <div class="grp"><label>UHID / Reg ID</label><input id="ck_uhid" value="2606-1534"></div>
+        <div class="grp"><label>IPD No.</label><input id="ck_ipdNo" value="37008"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Patient Details</legend>
+      <div class="grp"><label>Patient Name</label><input id="ck_patientName" value="RAJESH GOUR"></div>
+      <div class="grp"><label>Father / Husband Name</label><input id="ck_relativeName" value="BHAGIRATH GOUR"></div>
+      <div class="row2">
+        <div class="grp"><label>Age</label><input id="ck_age" value="33"></div>
+        <div class="grp"><label>Gender (M/F)</label><input id="ck_gender" value="M"></div>
+      </div>
+      <div class="grp"><label>Address</label><input id="ck_address" value="CHANDBAD DHAN KHEDI SEHORE M.P. 466001"></div>
+      <div class="grp"><label>Mobile No.</label><input id="ck_mobile" value="6267886648"></div>
+      <div class="grp"><label>Disease Name</label><input id="ck_disease" value="CANCER ORAL"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Treatment Details</legend>
+      <div class="grp"><label>Treating Doctor(s)</label><input id="ck_doctors" value="DR. PRATEEK TIWARI, DR. YOGESHWAR SHUKLA"></div>
+      <div class="grp"><label>Treatment Description</label><input id="ck_treatment" value="MEDICAL MANAGEMENT WITH ICU CARE"></div>
+      <div class="row2">
+        <div class="grp"><label>Amount (figures)</label><input id="ck_amountFig" value="1,00,000"></div>
+        <div class="grp"><label>Amount (words)</label><input id="ck_amountWords" value="ONE LAKH"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dates & Deposit</legend>
+      <div class="row2">
+        <div class="grp"><label>Admission Date</label><input id="ck_admitDate" value="30/06/2026"></div>
+        <div class="grp"><label>Ward (optional)</label><input id="ck_ward" value=""></div>
+      </div>
+      <div class="grp"><label>Operation Date / Detail</label><input id="ck_opDate" value="MEDICAL MANAGEMENT WITH ICU CARE"></div>
+      <div class="grp"><label>Discharge Date</label><input id="ck_dischargeDate" value=""></div>
+      <div class="grp"><label>Amount Deposited by Patient</label><input id="ck_deposited" value="3000/-"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Bank Details</legend>
+      <div class="grp"><label>Bank Name</label><input id="ck_bankName" value="AXIS BANK"></div>
+      <div class="grp"><label>Branch</label><input id="ck_branch" value="M.P. NAGAR, BHOPAL - 462011"></div>
+      <div class="grp"><label>Account Name</label><input id="ck_accName" value="LAKECITY INSTITUTE OF SURGICAL SCIENCES PVT. LTD"></div>
+      <div class="row2">
+        <div class="grp"><label>Account No.</label><input id="ck_accNo" value="912020043013210"></div>
+        <div class="grp"><label>IFSC Code</label><input id="ck_ifsc" value="UTIB0000044"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Doctor Signature Block</legend>
+      <div class="grp"><label>Doctor Name</label><input id="ck_signDoctor" value="Dr. Prateek Tiwari"></div>
+      <div class="grp"><label>Qualification</label><input id="ck_signQual" value="DM (Medical Oncology)"></div>
+      <div class="grp"><label>Designation</label><input id="ck_signDesig" value="Consultant Medical Oncologist"></div>
+      <div class="grp"><label>Registration No.</label><input id="ck_signReg" value="MP-9606"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Letterhead Space</legend>
+      <div class="grp">
+        <label>Blank Space Height for Letterhead (px)</label>
+        <input type="range" id="ck_headerHeight" min="60" max="350" value="175" step="5" oninput="updateHeaderHeight()">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#7a7362;margin-top:2px;">
+          <span>Kam (60px)</span>
+          <span id="ck_headerHeightVal" style="font-weight:700;color:var(--accent);">175px</span>
+          <span>Zyada (350px)</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <button class="printBtn" id="btn_ck" onclick="saveAndPrint('ck')">Save as PDF &amp; Print</button>
+    <p class="saveNote" id="status_ck">Clicking this first downloads the filled certificate as a PDF named with patient name + mobile number, then opens print.</p>
+    <p class="hint">Print on your letterhead — top area stays blank. Content is locked to fit exactly one A4 page.</p>
+  </div>
+
+  <div id="docWrap-ck">
+    <div class="page" id="ck_page">
+      <div id="ck_headerBlank"><!-- — लेटरहेड के लिए स्थान खाली रखा गया है / Space reserved for pre-printed letterhead — --></div>
+      <div id="ck_body">
+        <div>
+          <div class="toprow">
+            <span>पत्र क्र. : <b id="cko_letterNo"></b></span>
+            <span>दिनांक : <b id="cko_letterDate"></b></span>
+          </div>
+          <div class="toprow" style="justify-content:flex-start;">
+            <span>UHID No. – REG ID : <b id="cko_uhid"></b> , IPD NO- <b id="cko_ipdNo"></b></span>
+          </div>
+        </div>
+
+        <div class="title">चिकित्सकीय प्राक्कलन</div>
+
+        <p class="justify-line">
+          प्रमाणित किया जाता है कि श्री/श्रीमती <b id="cko_patientName"></b> पिता/पति श्री <b id="cko_relativeName"></b>
+          आयु <b id="cko_age"></b>/Y <b id="cko_gender"></b> वर्ष निवासी, <b id="cko_address"></b>
+          मोबाइल नं. <b id="cko_mobile"></b> (बीमारी का नाम) <b id="cko_disease"></b> से पीड़ित हैं।
+        </p>
+
+        <p class="justify-line">
+          इनका उपचार इस चिकित्सालय के चिकित्सक <b id="cko_doctors"></b> द्वारा किया जा रहा है। इनका उपचार विवरण
+          (<b id="cko_treatment"></b>) <b id="cko_disease2"></b> पर लगभग रूपये <b id="cko_amountFig"></b>/- (शब्दों में) <b id="cko_amountWords"></b> राशि का व्यय होना सम्भावित है।
+        </p>
+
+        <div>
+          <div class="field-row"><span class="label">❖ चिकित्सालय में भर्ती होने का दिनाँक एवं वार्ड</span><span class="colon">–</span><span class="value" id="cko_admitDate"></span></div>
+          <div class="field-row"><span class="label">❖ आपरेशन का दिनाँक (यदि आवश्यक हो)</span><span class="colon">–</span><span class="value" id="cko_opDate"></span></div>
+          <div class="field-row"><span class="label">❖ डिस्चार्ज/उपचार पूर्ण होने का दिनाँक</span><span class="colon">–</span><span class="value" id="cko_dischargeDate"></span></div>
+          <div class="field-row"><span class="label">❖ मरीज के द्वारा जमा की गई राशि</span><span class="colon">–</span><span class="value" id="cko_deposited"></span></div>
+          <div class="field-row"><span class="label">❖ मरीज के हस्ताक्षर अथवा अँगूठा</span><span class="colon">–</span><span class="value"></span></div>
+        </div>
+
+        <p class="justify-line">
+          यह प्राक्कलन मरीज/आवेदन के अनुरोध पर पहली बार दिया जा रहा है। राशि चिकित्सालय के निम्न बैंक खाते में जमा करने का कष्ट करें :–
+        </p>
+
+        <div class="bank-block">
+          <div class="field-row"><span class="label">❖ बैंक एवं</span><span class="colon">:</span><span class="value" id="cko_bankName"></span></div>
+          <div class="field-row"><span class="label">❖ शाखा का नाम</span><span class="colon">:</span><span class="value" id="cko_branch"></span></div>
+          <div class="field-row"><span class="label">❖ खाते का नाम</span><span class="colon">:</span><span class="value" id="cko_accName"></span></div>
+          <div class="field-row"><span class="label">❖ खाता क्रमांक</span><span class="colon">:</span><span class="value" id="cko_accNo"></span></div>
+          <div class="field-row"><span class="label">❖ आईएफएससी कोड</span><span class="colon">:</span><span class="value" id="cko_ifsc"></span></div>
+        </div>
+
+        <div class="sign-area">
+          <div class="col">
+            उपचार करने वाले चिकित्सक के हस्ताक्षर,<br>नाम, दूरभाष एवं ई-मेल का पता
+            <div class="doc-name-block">
+              <b id="cko_signDoctor"></b><br>
+              <span id="cko_signQual"></span><br>
+              <span id="cko_signDesig"></span><br>
+              Reg. No. <span id="cko_signReg"></span>
+            </div>
+          </div>
+          <div class="col right">द्वारा अधिकृत हस्ताक्षर</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SECTION 2: CM SAHAYATA KOSH FORM ================= -->
+<div id="cmSection" class="appSection">
+
+  <div id="formPanel">
+    <h1>Application Form Details</h1>
+    <p class="sub">Fill values — the form on the right (page 2 &amp; 3 of the original) updates live. Cover letter (page 1) removed.</p>
+
+    <fieldset>
+      <legend>1–6: Applicant (आवेदक)</legend>
+      <div class="grp"><label>Applicant Samagra ID</label><input id="cm_appSamagra" maxlength="9" oninput="fillBoxes('cm_appSamagra','box_cm_appSamagra',9);syncCm()"></div>
+      <div class="grp"><label>Applicant Name</label><input id="cm_appName" oninput="syncCm()"></div>
+      <div class="grp"><label>Father / Husband Name</label><input id="cm_appFather" oninput="syncCm()"></div>
+      <div class="grp"><label>Address</label><input id="cm_appAddress" oninput="syncCm()"></div>
+      <div class="row2">
+        <div class="grp"><label>District</label><input id="cm_appDistrict" oninput="syncCm()"></div>
+        <div class="grp"><label>State</label><input id="cm_appState" value="Madhya Pradesh" oninput="syncCm()"></div>
+      </div>
+      <div class="grp"><label>Applicant Mobile No.</label><input id="cm_appMobile" maxlength="10" oninput="fillBoxes('cm_appMobile','box_cm_appMobile',10);syncCm()"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>7–13: Patient / Beneficiary (मरीज/लाभार्थी)</legend>
+      <div class="grp"><label>Beneficiary Samagra ID</label><input id="cm_benSamagra" maxlength="9" oninput="fillBoxes('cm_benSamagra','box_cm_benSamagra',9);syncCm()"></div>
+      <div class="grp"><label>Beneficiary Name</label><input id="cm_benName" oninput="syncCm()"></div>
+      <div class="grp"><label>Father / Husband Name</label><input id="cm_benFather" oninput="syncCm()"></div>
+      <div class="grp"><label>Address</label><input id="cm_benAddress" oninput="syncCm()"></div>
+      <div class="row2">
+        <div class="grp"><label>District</label><input id="cm_benDistrict" oninput="syncCm()"></div>
+        <div class="grp"><label>State</label><input id="cm_benState" value="Madhya Pradesh" oninput="syncCm()"></div>
+      </div>
+      <div class="grp"><label>Beneficiary Mobile No.</label><input id="cm_benMobile" maxlength="10" oninput="fillBoxes('cm_benMobile','box_cm_benMobile',10);syncCm()"></div>
+      <div class="grp"><label>Relation of Applicant to Beneficiary</label><input id="cm_relation" oninput="syncCm()"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>14–22: Hospital &amp; Treatment</legend>
+      <div class="grp"><label>Hospital State</label><input id="cm_hospState" value="Madhya Pradesh" oninput="syncCm()"></div>
+      <div class="grp"><label>Hospital District</label><input id="cm_hospDistrict" oninput="syncCm()"></div>
+      <div class="grp"><label>Hospital Name</label><input id="cm_hospName" oninput="syncCm()"></div>
+      <div class="grp"><label>Disease Name</label><input id="cm_disease" oninput="syncCm()"></div>
+      <div class="grp"><label>Medical Estimate Amount</label><input id="cm_estimateAmt" oninput="syncCm()"></div>
+      <div class="row2">
+        <div class="grp"><label>Admitted? (हाँ/नहीं)</label><input id="cm_admittedYN" value="हाँ" oninput="syncCm()"></div>
+        <div class="grp"><label>Admission Date</label><input id="cm_admitDate" oninput="syncCm()"></div>
+      </div>
+      <div class="row2">
+        <div class="grp"><label>Discharged? (हाँ/नहीं)</label><input id="cm_dischargedYN" value="नहीं" oninput="syncCm()"></div>
+        <div class="grp"><label>Discharge Date</label><input id="cm_dischargeDate" oninput="syncCm()"></div>
+      </div>
+      <div class="grp"><label>Aadhar Card Number</label><input id="cm_aadhar" maxlength="12" oninput="fillBoxes('cm_aadhar','box_cm_aadhar',12);syncCm()"></div>
+      <div class="grp"><label>Comes under BPL? (हाँ/नहीं)</label><input id="cm_bplYN" value="नहीं" oninput="syncCm()"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>23–27: Bank Details</legend>
+      <div class="grp"><label>Bank Name</label><input id="cm_bankName" oninput="syncCm()"></div>
+      <div class="grp"><label>Bank Branch</label><input id="cm_bankBranch" oninput="syncCm()"></div>
+      <div class="grp"><label>Account Holder Name</label><input id="cm_accHolder" oninput="syncCm()"></div>
+      <div class="grp"><label>Account Number</label><input id="cm_accNumber" oninput="syncCm()"></div>
+      <div class="grp"><label>IFSC Code</label><input id="cm_ifsc" maxlength="11" oninput="fillBoxes('cm_ifsc','box_cm_ifsc',11);syncCm()"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>28–33: Financial &amp; Scheme Info</legend>
+      <div class="grp"><label>Occupation &amp; Annual Family Income</label><input id="cm_occIncome" oninput="syncCm()"></div>
+      <div class="grp"><label>Govt. Service Info (if any)</label><input id="cm_govtService" oninput="syncCm()"></div>
+      <div class="grp"><label>Prior CM Fund Assistance Detail</label><input id="cm_priorAssist" oninput="syncCm()"></div>
+      <div class="grp"><label>Eligible for State Illness Fund / Ayushman? (हाँ/नहीं)</label><input id="cm_eligScheme" value="नहीं" oninput="syncCm()"></div>
+      <div class="grp"><label>Availing Mediclaim/Insurance? (हाँ/नहीं)</label><input id="cm_mediclaim" value="नहीं" oninput="syncCm()"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Declaration &amp; Signature</legend>
+      <div class="row2">
+        <div class="grp"><label>Place</label><input id="cm_place" oninput="syncCm()"></div>
+        <div class="grp"><label>Date</label><input id="cm_declDate" oninput="syncCm()"></div>
+      </div>
+      <div class="grp"><label>Signature Name</label><input id="cm_signName" oninput="syncCm()"></div>
+      <div class="grp"><label>Signature Address</label><input id="cm_signAddress" oninput="syncCm()"></div>
+      <div class="grp"><label>Signature Mobile No.</label><input id="cm_signMobile" oninput="syncCm()"></div>
+    </fieldset>
+
+    <button class="printBtn" id="btn_cm" onclick="saveAndPrint('cm')">Save as PDF &amp; Print</button>
+    <p class="saveNote" id="status_cm">Clicking this first downloads the filled application (both pages) as a single PDF named with patient/applicant name + mobile number, then opens print.</p>
+    <p class="hint">Both pages print exactly as original (page 1 cover letter removed), page-break controlled so they always print as 2 separate pages.</p>
+  </div>
+
+  <div id="docWrap-cm">
+    <div class="page">
+      <div class="formtitle">मुख्यमंत्री सहायता कोष/स्वेच्छानुदान से उपचार हेतु आर्थिक सहायता प्राप्त करने हेतु आवेदन पत्र</div>
+
+      <div class="item-row"><span class="item-num">1.</span><span class="item-label">आवेदक का समग्र आई.डी. नंबर :-</span><div class="boxes" id="box_cm_appSamagra"></div></div>
+      <div class="item-row"><span class="item-num">2.</span><span class="item-label">आवेदक का नाम :-</span><span class="item-fill" id="cmo_appName"></span></div>
+      <div class="item-row"><span class="item-num">3.</span><span class="item-label">आवेदक के पिता/पति का नाम :-</span><span class="item-fill" id="cmo_appFather"></span></div>
+      <div class="item-row"><span class="item-num">4.</span><span class="item-label">आवेदक का पता :-</span><span class="item-fill" id="cmo_appAddress"></span></div>
+      <div class="item-row">
+        <span class="item-num">5.</span><span class="item-label">आवेदक का जिला :-</span><span class="item-fill" id="cmo_appDistrict"></span>
+        <span class="item-label">राज्य</span><span class="item-fill" id="cmo_appState"></span>
+      </div>
+      <div class="item-row"><span class="item-num">6.</span><span class="item-label">आवेदक का मोबाइल नं. :-</span><div class="boxes" id="box_cm_appMobile"></div></div>
+      <div class="item-row"><span class="item-num">7.</span><span class="item-label">मरीज/लाभार्थी का समग्र आई.डी. नंबर :-</span><div class="boxes" id="box_cm_benSamagra"></div></div>
+      <div class="item-row"><span class="item-num">8.</span><span class="item-label">मरीज/लाभार्थी का नाम :-</span><span class="item-fill" id="cmo_benName"></span></div>
+      <div class="item-row"><span class="item-num">9.</span><span class="item-label">मरीज/लाभार्थी के पिता/पति का नाम :-</span><span class="item-fill" id="cmo_benFather"></span></div>
+      <div class="item-row"><span class="item-num">10.</span><span class="item-label">मरीज/लाभार्थी का पता :-</span><span class="item-fill" id="cmo_benAddress"></span></div>
+      <div class="item-row">
+        <span class="item-num">11.</span><span class="item-label">मरीज/लाभार्थी का जिला :-</span><span class="item-fill" id="cmo_benDistrict"></span>
+        <span class="item-label">राज्य</span><span class="item-fill" id="cmo_benState"></span>
+      </div>
+      <div class="item-row"><span class="item-num">12.</span><span class="item-label">मरीज/लाभार्थी का मोबाइल नं. :-</span><div class="boxes" id="box_cm_benMobile"></div></div>
+      <div class="item-row"><span class="item-num">13.</span><span class="item-label">आवेदनकर्ता का मरीज/लाभार्थी से संबंध :-</span><span class="item-fill" id="cmo_relation"></span></div>
+      <div class="item-row"><span class="item-num">14.</span><span class="item-label">अस्पताल का राज्य :-</span><span class="item-fill" id="cmo_hospState"></span></div>
+      <div class="item-row"><span class="item-num">15.</span><span class="item-label">अस्पताल का जिला :-</span><span class="item-fill" id="cmo_hospDistrict"></span></div>
+      <div class="item-row"><span class="item-num">16.</span><span class="item-label">अस्पताल का नाम :-</span><span class="item-fill" id="cmo_hospName"></span></div>
+      <div class="item-row"><span class="item-num">17.</span><span class="item-label">बीमारी का नाम :-</span><span class="item-fill" id="cmo_disease"></span></div>
+      <div class="item-row"><span class="item-num">18.</span><span class="item-label">चिकित्सीय प्राक्कलन की राशि :-</span><span class="item-fill" id="cmo_estimateAmt"></span></div>
+      <div class="item-row">
+        <span class="item-num">19.</span><span class="item-label">क्या मरीज अस्पताल में भर्ती है :-</span><span class="item-fill small" id="cmo_admittedYN"></span>
+        <span class="item-label">भर्ती होने का दिनांक</span><span class="item-fill" id="cmo_admitDate"></span>
+      </div>
+      <div class="item-row">
+        <span class="item-num">20.</span><span class="item-label">यदि डिस्चार्ज किया गया :-</span><span class="item-fill small" id="cmo_dischargedYN"></span>
+        <span class="item-label">डिस्चार्ज होने का दिनांक</span><span class="item-fill" id="cmo_dischargeDate"></span>
+      </div>
+      <div class="item-row"><span class="item-num">21.</span><span class="item-label">मरीज का आधार कार्ड नंबर :-</span><div class="boxes" id="box_cm_aadhar"></div></div>
+      <div class="item-row"><span class="item-num">22.</span><span class="item-label">मरीज/लाभार्थी बीपीएल के अंतर्गत आता है :-</span><span class="item-fill" id="cmo_bplYN"></span></div>
+
+      <div class="footerpage">निरंतर.........2/-</div>
+    </div>
+
+    <div class="page">
+      <div class="pagetop-num">//2//</div>
+
+      <div class="item-row"><span class="item-num">23.</span><span class="item-label">मरीज/लाभार्थी के बैंक का नाम :-</span><span class="item-fill" id="cmo_bankName"></span></div>
+      <div class="item-row"><span class="item-num">24.</span><span class="item-label">मरीज/लाभार्थी की बैंक शाखा का नाम</span><span class="item-fill" id="cmo_bankBranch"></span></div>
+      <div class="item-row"><span class="item-num">25.</span><span class="item-label">मरीज/लाभार्थी के खाताधारक का नाम :-</span><span class="item-fill" id="cmo_accHolder"></span></div>
+      <div class="item-row"><span class="item-num">26.</span><span class="item-label">मरीज/लाभार्थी के बैंक का खाता क्रमांक :-</span><span class="item-fill" id="cmo_accNumber"></span></div>
+      <div class="item-row"><span class="item-num">27.</span><span class="item-label">मरीज/लाभार्थी के बैंक का आईएफएससी कोड:-</span></div>
+      <div class="item-row" style="margin-top:-6px;"><div class="boxes" id="box_cm_ifsc"></div></div>
+
+      <div class="item-row"><span class="item-num">28.</span><span class="item-label">मरीज का व्यवसाय तथा परिवार की वार्षिक आय -</span><span class="item-fill" id="cmo_occIncome"></span></div>
+      <div class="item-row"><span class="item-num">29.</span><span class="item-label">मरीज अथवा उसके परिवार में से कोई शासकीय सेवा में हो तो उसकी जानकारी</span><span class="item-fill" id="cmo_govtService"></span></div>
+      <div class="item-row">
+        <span class="item-num">30.</span>
+        <span class="item-label" style="white-space:normal;">यदि पूर्व में मरीज के उपचार हेतु मुख्यमंत्री सहायता कोष/स्वेच्छानुदान मद से कोई आर्थिक सहायता प्राप्त हुई हो, तो उसका विवरण.</span>
+        <span class="item-fill" id="cmo_priorAssist"></span>
+      </div>
+      <div class="item-row"><span class="item-num">31.</span><span class="item-label">क्या राज्य बीमारी सहायता निधि/आयुष्मान योजना अथवा किसी अन्य प्रचलित योजना की पात्रता है? हाँ/नहीं</span><span class="item-fill" id="cmo_eligScheme"></span></div>
+      <div class="item-row"><span class="item-num">32.</span><span class="item-label">क्या मेडिक्लेम/बीमा पॉलिसी या किसी अन्य प्रचलित योजना का लाभ लिया जा रहा है ? हाँ/नहीं</span><span class="item-fill" id="cmo_mediclaim"></span></div>
+      <div class="item-row" style="align-items:flex-start;">
+        <span class="item-num">33.</span>
+        <span class="item-label" style="white-space:normal;line-height:1.7;">मुख्यमंत्री स्वेच्छानुदान से आर्थिक सहायता स्वीकृति के संबंध में शासन द्वारा मुझे इलेक्ट्रानिक संसाधन के माध्यम से संदेश प्रदान किया जा सकता है, इस हेतु सहमत हूँ।</span>
+      </div>
+
+      <p class="declare">मैं शपथपूर्वक घोषणा करता/करती हूँ कि उपरोक्त विवरण मेरी जानकारी एवं विश्वास के अनुसार सही है।</p>
+
+      <div class="place-date">
+        स्थान- <span class="item-fill" id="cmo_place"></span><br>
+        दिनांक- <span class="item-fill" id="cmo_declDate"></span>
+      </div>
+
+      <div class="sign-block">
+        <div class="col">
+          आवेदक के हस्ताक्षर<br>
+          नाम - <span class="item-fill" id="cmo_signName"></span><br>
+          पता - <span class="item-fill" id="cmo_signAddress"></span><br>
+          मोबाईल नम्बर - <span class="item-fill" id="cmo_signMobile"></span>
+        </div>
+      </div>
+
+      <div class="attach">
+        संलग्न :-
+        <ol>
+          <li>निर्धारित प्रपत्र में चिकित्सीय प्राक्कलन की मूल प्रति.</li>
+          <li>आधार कार्ड की छायाप्रति</li>
+          <li>समग्र आईडी कार्ड की छायाप्रति</li>
+          <li>बैंक पास बुक के मुख्य पृष्ठ की छायाप्रति/निरस्त बैंक चैक</li>
+          <li>बीमारी से संबंधित जांच रिपोर्ट</li>
+          <li>किडनी/लीवर ट्रांसप्लांट मरीज में NOC &amp; Affidavit</li>
+        </ol>
+      </div>
+
+      <div class="note-box">
+        कृपया ध्यान दें:- आवेदन पत्र के सभी बिन्दुओं की पूर्ति करना अनिवार्य है, पूर्ति न होने की स्थिति में आवेदन स्वत: ही निरस्त माना जाएगा।
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ---------- TAB SWITCH ---------- */
+  function switchTab(tab){
+    document.getElementById('ckSection').classList.toggle('active', tab==='ck');
+    document.getElementById('cmSection').classList.toggle('active', tab==='cm');
+    document.getElementById('tabBtn_ck').classList.toggle('active', tab==='ck');
+    document.getElementById('tabBtn_cm').classList.toggle('active', tab==='cm');
+  }
+
+  /* ---------- CHIKITSAKIYA PRAKLAN SYNC ---------- */
+  const ckTextMap = [
+    'letterNo','letterDate','uhid','ipdNo','patientName','relativeName','age','gender',
+    'address','mobile','doctors','treatment','amountFig','amountWords',
+    'admitDate','opDate','dischargeDate','deposited','bankName','branch',
+    'accName','accNo','ifsc','signDoctor','signQual','signDesig','signReg'
+  ];
+  function combineAdmitCk(){
+    const d = document.getElementById('ck_admitDate').value;
+    const w = document.getElementById('ck_ward').value;
+    document.getElementById('cko_admitDate').textContent = w ? (d + ' , वार्ड - ' + w) : d;
+  }
+  function syncCk(){
+    ckTextMap.forEach(id=>{
+      const src = document.getElementById('ck_'+id);
+      const dst = document.getElementById('cko_'+id);
+      if(src && dst) dst.textContent = src.value;
+    });
+    const disease = document.getElementById('ck_disease').value;
+    document.getElementById('cko_disease').textContent = disease;
+    document.getElementById('cko_disease2').textContent = disease;
+    combineAdmitCk();
+  }
+  document.querySelectorAll('#ckSection #formPanel input, #ckSection #formPanel textarea').forEach(el=>{
+    el.addEventListener('input', syncCk);
+  });
+
+  /* ---------- CM FORM SYNC ---------- */
+  const cmTextMap = [
+    'appName','appFather','appAddress','appDistrict','appState',
+    'benName','benFather','benAddress','benDistrict','benState','relation',
+    'hospState','hospDistrict','hospName','disease','estimateAmt',
+    'admittedYN','admitDate','dischargedYN','dischargeDate','bplYN',
+    'bankName','bankBranch','accHolder','accNumber',
+    'occIncome','govtService','priorAssist','eligScheme','mediclaim',
+    'place','declDate','signName','signAddress','signMobile'
+  ];
+  function syncCm(){
+    cmTextMap.forEach(id=>{
+      const src = document.getElementById('cm_'+id);
+      const dst = document.getElementById('cmo_'+id);
+      if(src && dst) dst.textContent = src.value;
+    });
+  }
+
+  function makeBoxes(containerId, length){
+    const c = document.getElementById(containerId);
+    c.innerHTML='';
+    for(let i=0;i<length;i++){
+      const b = document.createElement('div');
+      b.className='box';
+      c.appendChild(b);
+    }
+  }
+  function fillBoxes(inputId, containerId, length){
+    const val = document.getElementById(inputId).value.toUpperCase();
+    const boxes = document.getElementById(containerId).children;
+    for(let i=0;i<length;i++){
+      boxes[i].textContent = val[i] ? val[i] : '';
+    }
+  }
+  makeBoxes('box_cm_appSamagra',9);
+  makeBoxes('box_cm_appMobile',10);
+  makeBoxes('box_cm_benSamagra',9);
+  makeBoxes('box_cm_benMobile',10);
+  makeBoxes('box_cm_aadhar',12);
+  makeBoxes('box_cm_ifsc',11);
+
+  function updateHeaderHeight(){
+    const v = parseInt(document.getElementById('ck_headerHeight').value) || 175;
+    const el = document.getElementById('ck_headerBlank');
+    el.style.height = v+'px';
+    el.style.flex = '0 0 '+v+'px';
+    document.getElementById('ck_headerHeightVal').textContent = v+'px';
+  }
+
+  /* ---------- SAVE AS PDF + PRINT ---------- */
+  function sanitize(s){
+    return (s || 'NA').toString().trim().replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,'_');
+  }
+
+  async function generateAndSavePdf(type){
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','pt','a4');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    const pageEls = type==='ck'
+      ? [document.getElementById('ck_page')]
+      : Array.from(document.querySelectorAll('#docWrap-cm .page'));
+
+    for(let i=0;i<pageEls.length;i++){
+      const canvas = await html2canvas(pageEls[i], {scale:2, useCORS:true, backgroundColor:'#ffffff'});
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgH = Math.min(pageH, (canvas.height * pageW) / canvas.width);
+      if(i>0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, pageW, imgH);
+    }
+
+    let name, mobile, filePrefix;
+    if(type==='ck'){
+      name = document.getElementById('ck_patientName').value;
+      mobile = document.getElementById('ck_mobile').value;
+      filePrefix = 'ChikitsakiyaPraklan';
+    } else {
+      name = document.getElementById('cm_benName').value || document.getElementById('cm_appName').value;
+      mobile = document.getElementById('cm_benMobile').value || document.getElementById('cm_appMobile').value;
+      filePrefix = 'CMSahayataKoshForm';
+    }
+    pdf.save(filePrefix + '_' + sanitize(name) + '_' + sanitize(mobile) + '.pdf');
+  }
+
+  async function saveAndPrint(type){
+    const btn = document.getElementById('btn_'+type);
+    const status = document.getElementById('status_'+type);
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating PDF...';
+    try{
+      await generateAndSavePdf(type);
+      if(status) status.textContent = 'PDF saved to your Downloads folder. Opening print dialog...';
+    }catch(err){
+      console.error(err);
+      if(status) status.textContent = 'Could not generate PDF (' + err.message + '). Opening print dialog anyway.';
+    }
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+    setTimeout(()=>window.print(), 400);
+  }
+
+  syncCk();
+  syncCm();
+  updateHeaderHeight();
+</script>
+
+</body>
+</html>
